@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../maindrawer.dart';
 import 'package:http/http.dart' as http;
+import 'package:fluttertoast/fluttertoast.dart';
 
 void main() {
   runApp(MyApp());
@@ -24,20 +25,37 @@ class PriorityScreen extends StatefulWidget {
 }
 
 class _HomePageState extends State<PriorityScreen> {
-  List data;
-  Future<String> getData() async {
-    http.Response response = await http.get(
-        Uri.encodeFull("http://192.168.43.184/skripsi/api/priority_api"),
-        headers: {"Accept": "application/json"});
-    setState(() {
-      data = json.decode(response.body);
-    });
-    return "Success!";
+  Future _priority;
+  List mydata;
+  List unfilterData;
+  Future loadJsonData() async {
+    var data = await http.get("http://192.168.43.184/skripsi/api/priority_api");
+
+    var jsonData = json.decode(data.body);
+
+    List<Priority> prioritys = [];
+    if (jsonData['response_message'] == 'Data Minimal 2 Barang') {
+      prioritys = null;
+      mydata = prioritys;
+      this.unfilterData = mydata;
+    } else {
+      for (var p in jsonData['data']) {
+        Priority priority = Priority(
+            p["index"], p["customer"], p["barang"], p["jumlah"], p["detail"]);
+
+        prioritys.add(priority);
+        mydata = prioritys;
+        this.unfilterData = mydata;
+      }
+    }
+
+    return prioritys;
   }
 
   @override
   void initState() {
-    this.getData();
+    super.initState();
+    _priority = loadJsonData();
   }
 
   @override
@@ -57,60 +75,28 @@ class _HomePageState extends State<PriorityScreen> {
           child: MainDrawer(),
         ),
       ),
-      body: ListView.builder(
-        itemCount: data == null ? 0 : data.length,
-        itemBuilder: (context, index) {
-          return Card(
-            child: Padding(
-              padding:
-                  const EdgeInsets.only(top: 10, bottom: 10, left: 3, right: 3),
-              child: ListTile(
-                title: Text(
-                  data[index]["customer"],
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                subtitle: Row(
-                  children: <Widget>[
-                    Text(
-                      data[index]["barang"],
-                      style:
-                          TextStyle(fontSize: 20, color: Colors.grey.shade600),
-                    ),
-                    Text(
-                      "(" + data[index]["jumlah"] + " pcs)",
-                      style:
-                          TextStyle(fontSize: 20, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-                trailing: GestureDetector(
-                  child: Icon(Icons.check_circle_rounded),
-                  onTap: () {
-                    confirm(data[index]["detail"], data[index]["barang"],
-                        data[index]["customer"]);
-                  },
-                ),
-              ),
-              // child: Column(
-              //   crossAxisAlignment: CrossAxisAlignment.start,
-              //   children: <Widget>[
-              //     Text(
-              //       data[index]["barang"],
-              //       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              //     ),
-              //     Text(
-              //       "Jumlah : ( " + data[index]["jumlah"] + " Pcs )",
-              //       style: TextStyle(fontSize: 20, color: Colors.grey.shade600),
-              //     ),
-              //     Text(
-              //       "Customer : " + data[index]["customer"],
-              //       style: TextStyle(fontSize: 20, color: Colors.grey.shade600),
-              //     ),
-              //   ],
-              // ),
-            ),
-          );
-        },
+      body: Container(
+        child: FutureBuilder(
+          future: _priority,
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.data == null) {
+              return Container(
+                  child: Center(
+                      child: Text(
+                "Data Minimal 2 Barang",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              )));
+            } else {
+              // snapshot.data[index].customer
+              return ListView.builder(
+                itemBuilder: (context, index) {
+                  return index == 0 ? _searchBar() : _listItem(index - 1);
+                },
+                itemCount: unfilterData.length + 1,
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -122,16 +108,98 @@ class _HomePageState extends State<PriorityScreen> {
       actions: <Widget>[
         new RaisedButton(
           child: Text("Tidak"),
-          color: Colors.redAccent,
-          onLongPress: () {},
+          color: Colors.red[900],
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
         ),
         new RaisedButton(
           child: Text("Yakin"),
-          color: Color(0xFF016CB1),
-          onLongPress: () {},
+          color: Colors.green[900],
+          onPressed: () {
+            finishPriority(id);
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (BuildContext context) => super.widget));
+            Fluttertoast.showToast(
+              msg: "Barang $barang milik $customer berhasil diselesaikan",
+              toastLength: Toast.LENGTH_LONG,
+            );
+          },
         ),
       ],
     );
     showDialog(context: context, builder: (_) => alertDialog);
   }
+
+  void finishPriority(id) async {
+    var url = "http://192.168.43.184/skripsi/api/priority_api/finishPriority";
+    var data = {
+      "nama_barang_detail": id,
+    };
+
+    await http.post(url, body: data);
+  }
+
+  _searchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        decoration: InputDecoration(hintText: 'Cari Data Customer ...'),
+        onChanged: (text) {
+          text = text.toLowerCase();
+          setState(() {
+            unfilterData = mydata.where((note) {
+              var noteTitle = note.customer.toLowerCase();
+              return noteTitle.contains(text);
+            }).toList();
+          });
+        },
+      ),
+    );
+  }
+
+  _listItem(index) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 10, left: 3, right: 3),
+        child: ListTile(
+          title: Text(
+            mydata[index].customer,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          subtitle: Row(
+            children: <Widget>[
+              Text(
+                mydata[index].barang,
+                style: TextStyle(fontSize: 20, color: Colors.grey.shade600),
+              ),
+              Text(
+                "(" + mydata[index].jumlah + " pcs)",
+                style: TextStyle(fontSize: 20, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+          trailing: GestureDetector(
+            child: Icon(Icons.check_circle_rounded),
+            onTap: () {
+              confirm(mydata[index].detail, mydata[index].barang,
+                  mydata[index].customer);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class Priority {
+  final int index;
+  final String customer;
+  final String barang;
+  final String jumlah;
+  final String detail;
+
+  Priority(this.index, this.customer, this.barang, this.jumlah, this.detail);
 }
