@@ -22,9 +22,18 @@ class LoginScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
-                child: Image.asset("assets/images/main.png",
-                    width: size.width * 0.20),
-                alignment: Alignment.center,
+                // child: Image.asset("assets/images/main.png",
+                //     width: size.width * 0.20),
+                // alignment: Alignment.center,
+                child: Text(
+                  "Lilik Collection",
+                  style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      // fontWeight: FontWeight.bold,
+                      color: Color(0xFF016CB1),
+                      fontSize: 36),
+                  textAlign: TextAlign.center,
+                ),
               ),
               SizedBox(height: size.height * 0.1),
               Container(
@@ -35,7 +44,7 @@ class LoginScreen extends StatelessWidget {
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF016CB1),
-                      fontSize: 36),
+                      fontSize: 20),
                   textAlign: TextAlign.left,
                 ),
               ),
@@ -115,25 +124,25 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                alignment: Alignment.centerRight,
-                margin: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                child: GestureDetector(
-                  onTap: () => {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => RegisterScreen()))
-                  },
-                  child: Text(
-                    "Belum punya akun? Registrasi sekarang",
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF016CB1)),
-                  ),
-                ),
-              )
+              // Container(
+              //   alignment: Alignment.centerRight,
+              //   margin: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+              //   child: GestureDetector(
+              //     onTap: () => {
+              //       Navigator.push(
+              //           context,
+              //           MaterialPageRoute(
+              //               builder: (context) => RegisterScreen()))
+              //     },
+              //     child: Text(
+              //       "Belum punya akun? Registrasi sekarang",
+              //       style: TextStyle(
+              //           fontSize: 12,
+              //           fontWeight: FontWeight.bold,
+              //           color: Color(0xFF016CB1)),
+              //     ),
+              //   ),
+              // )
             ],
           ),
         ),
@@ -162,10 +171,17 @@ class LoginScreen extends StatelessWidget {
         Fluttertoast.showToast(
             msg: "Password anda salah", toastLength: Toast.LENGTH_SHORT);
       } else {
-        Fluttertoast.showToast(
-            msg: "Sukses Login", toastLength: Toast.LENGTH_SHORT);
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => PriorityScreen()));
+        if (response['response_message'] == "Hak akses anda bukan pemilik") {
+            Fluttertoast.showToast(
+            msg: "Hak akses anda bukan pemilik", toastLength: Toast.LENGTH_SHORT);
+        } 
+        else 
+        {
+            Fluttertoast.showToast(
+                msg: "Sukses Login", toastLength: Toast.LENGTH_SHORT);
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => PriorityScreen()));
+        }
       }
     }
   }

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../maindrawer.dart';
 import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:skripsi/Screens/login/login.dart';
 
 void main() {
   runApp(MyApp());
@@ -41,14 +41,13 @@ class _HomePageState extends State<PriorityScreen> {
     } else {
       for (var p in jsonData['data']) {
         Priority priority = Priority(
-            p["index"], p["customer"], p["barang"], p["jumlah"], p["detail"]);
+            p["index"],p["nomer"].toString(), p["customer"], p["barang"], p["jumlah"], p["detail"]);
 
         prioritys.add(priority);
         mydata = prioritys;
         this.unfilterData = mydata;
       }
     }
-
     return prioritys;
   }
 
@@ -64,17 +63,34 @@ class _HomePageState extends State<PriorityScreen> {
       appBar: AppBar(
         backgroundColor: Color(0xFF016CB1),
         title: Text("Prioritas Produksi"),
+        automaticallyImplyLeading: false,
+        actions: <Widget>[
+        Padding(
+          padding: EdgeInsets.only(right: 20.0),
+          child: GestureDetector(
+            onTap: () => {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => LoginScreen()))
+            },
+            child: Icon(
+                Icons.logout,
+            ),
+          )
+        ),
+      ],
       ),
       //Now we are going to open a new file
       // where we will create the layout of the Drawer
-      drawer: Theme(
-        data: Theme.of(context).copyWith(
-          canvasColor: Color(0xFF016CB1),
-        ),
-        child: Drawer(
-          child: MainDrawer(),
-        ),
-      ),
+      // drawer: Theme(
+      //   data: Theme.of(context).copyWith(
+      //     canvasColor: Color(0xFF016CB1),
+      //   ),
+      //   // child: Drawer(
+      //   //   child: MainDrawer(),
+      //   // ),
+      // ),
       body: Container(
         child: FutureBuilder(
           future: _priority,
@@ -166,17 +182,17 @@ class _HomePageState extends State<PriorityScreen> {
         padding: const EdgeInsets.only(top: 10, bottom: 10, left: 3, right: 3),
         child: ListTile(
           title: Text(
-            mydata[index].customer,
+            unfilterData[index].nomer +". "+ unfilterData[index].customer,
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           subtitle: Row(
             children: <Widget>[
               Text(
-                mydata[index].barang,
+                unfilterData[index].barang,
                 style: TextStyle(fontSize: 20, color: Colors.grey.shade600),
               ),
               Text(
-                "(" + mydata[index].jumlah + " pcs)",
+                "(" + unfilterData[index].jumlah + " pcs)",
                 style: TextStyle(fontSize: 20, color: Colors.grey.shade600),
               ),
             ],
@@ -184,8 +200,8 @@ class _HomePageState extends State<PriorityScreen> {
           trailing: GestureDetector(
             child: Icon(Icons.check_circle_rounded),
             onTap: () {
-              confirm(mydata[index].detail, mydata[index].barang,
-                  mydata[index].customer);
+              confirm(unfilterData[index].detail, unfilterData[index].barang,
+                  unfilterData[index].customer);
             },
           ),
         ),
@@ -196,10 +212,11 @@ class _HomePageState extends State<PriorityScreen> {
 
 class Priority {
   final int index;
+  final String nomer;
   final String customer;
   final String barang;
   final String jumlah;
   final String detail;
 
-  Priority(this.index, this.customer, this.barang, this.jumlah, this.detail);
+  Priority(this.index,this.nomer, this.customer, this.barang, this.jumlah, this.detail);
 }
