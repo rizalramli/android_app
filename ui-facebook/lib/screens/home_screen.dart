@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-
-import 'package:flutter/material.dart';
 import 'package:flutter_facebook_responsive_ui/config/palette.dart';
+import 'package:flutter_facebook_responsive_ui/data/data.dart';
+import 'package:flutter_facebook_responsive_ui/widgets/circle_button.dart';
+import 'package:flutter_facebook_responsive_ui/widgets/create_post_container.dart';
+import 'package:flutter_facebook_responsive_ui/widgets/rooms.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -24,33 +27,28 @@ class HomeScreen extends StatelessWidget {
             centerTitle: false,
             floating: true,
             actions: [
-              Container(
-                margin: const EdgeInsets.all(6.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: Icon(Icons.search),
-                  iconSize: 30.0,
-                  color: Colors.black,
-                ),
+              CircleButton(
+                icon: Icons.search,
+                iconSize: 30.0,
+                onPressed: () => print('Search'),
               ),
-              Container(
-                margin: const EdgeInsets.all(6.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: Icon(Icons.search),
-                  iconSize: 30.0,
-                  color: Colors.black,
-                ),
+              CircleButton(
+                icon: MdiIcons.facebookMessenger,
+                iconSize: 30.0,
+                onPressed: () => print('Messanger'),
               )
             ],
+          ),
+          SliverToBoxAdapter(
+            child: CreatePostContainer(
+              currentUser: currentUser,
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 5.0),
+            sliver: SliverToBoxAdapter(
+              child: Rooms(onlineUsers: onlineUsers),
+            ),
           )
         ],
       ),
